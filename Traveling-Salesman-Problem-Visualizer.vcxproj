@@ -149,6 +149,7 @@
     <ClCompile Include="dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="source\Main.cpp" />
     <ClCompile Include="source\Point2D.cpp" />
+    <ClCompile Include="source\Shader.cpp" />
     <ClCompile Include="source\TravelingSalesmanSolver.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="dependencies\imgui\imstb_rectpack.h" />
     <ClInclude Include="dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="dependencies\imgui\imstb_truetype.h" />
+    <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\TravelingSalesmanSolver.h" />
     <ClInclude Include="include\Point2D.h" />
   </ItemGroup>

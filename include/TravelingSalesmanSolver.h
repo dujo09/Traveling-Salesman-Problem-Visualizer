@@ -14,6 +14,8 @@ enum SolvingAlgorithm
 
 class TravelingSalesmanSolver
 {
+	float m_xMin, m_xMax, m_yMin, m_yMax;
+
 	std::vector<Point2D> m_points;
 	std::vector<Point2D*> m_route;
 
@@ -25,12 +27,12 @@ class TravelingSalesmanSolver
 	std::atomic<bool> m_isInterrupt = false;
 
 public:
-	TravelingSalesmanSolver(int numberOfPoints, int xMin, int xMax, int yMin, int yMax);
+	TravelingSalesmanSolver(int numberOfPoints, float xMin, float xMax, float yMin, float yMax);
 	~TravelingSalesmanSolver();
 
 	bool isSolving() const { return m_isSolving; };
 
-	const std::vector<Point2D>& getItems() const { return m_points; };
+	const std::vector<Point2D>& getPoints() const { return m_points; };
 	int getNumberOfPoints() const { return m_points.size(); };
 
 	const std::vector<Point2D*>& getRoute() const { return m_route; };
@@ -38,12 +40,24 @@ public:
 	unsigned int getTimeStep() const { return m_timeStepNanoseconds; };
 	void setTimeStep(int timeStepNanoseconds) { m_timeStepNanoseconds = timeStepNanoseconds; };
 
-	const SolvingAlgorithm getSelectedAlgorithm() { return m_selectedAlgorithm; };
+	SolvingAlgorithm getSelectedAlgorithm() { return m_selectedAlgorithm; };
 	void setSolvingAlgorithm(SolvingAlgorithm solvingAlgorithm) { m_selectedAlgorithm = solvingAlgorithm; };
 
-	void generatePoints(int numberOfPoints, int xMin, int xMax, int yMin, int yMax);
+	float getXMin() { return m_xMin; };
+	void setXMin(float xMin) { m_xMin = xMin; };
+	float getXMax() { return m_xMax; };
+	void setXMax(float xMax) { m_xMax = xMax; };
+	float getYMin() { return m_yMin; };
+	void setYMin(float yMin) { m_yMin = yMin; };
+	float getYMax() { return m_yMax; };
+	void setYMax(float yMax) { m_yMax = yMax; };
 
-public:
+	void generatePoints(int numberOfPoints);
+
+	void startSolving();
+	void _startSolving();
+
+private:
 	void greedyAlgorithm();
 
 

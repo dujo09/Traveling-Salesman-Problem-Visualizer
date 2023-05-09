@@ -3,9 +3,13 @@
 #include <random>
 #include <limits>
 
-TravelingSalesmanSolver::TravelingSalesmanSolver(int numberOfPoints, int xMin, int xMax, int yMin, int yMax)
+TravelingSalesmanSolver::TravelingSalesmanSolver(int numberOfPoints, float xMin, float xMax, float yMin, float yMax)
 {
-	generatePoints(numberOfPoints, xMin, xMax, yMin, yMax);
+    m_xMin = xMin;
+    m_xMax = xMax;
+    m_yMin = yMin;
+    m_yMax = yMax;
+	generatePoints(numberOfPoints);
 }
 
 TravelingSalesmanSolver::~TravelingSalesmanSolver()
@@ -17,11 +21,11 @@ TravelingSalesmanSolver::~TravelingSalesmanSolver()
     }
 }
 
-void TravelingSalesmanSolver::generatePoints(int numberOfPoints, int xMin, int xMax, int yMin, int yMax)
+void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
 {
 	std::random_device rd;
-	std::uniform_real_distribution<double> xDistribution(xMin, xMax);
-	std::uniform_real_distribution<double> yDistribution(yMin, yMax);
+	std::uniform_real_distribution<double> xDistribution(m_xMin, m_xMax);
+	std::uniform_real_distribution<double> yDistribution(m_yMin, m_yMax);
 
     m_points.clear();
 
@@ -32,6 +36,25 @@ void TravelingSalesmanSolver::generatePoints(int numberOfPoints, int xMin, int x
 
         m_points.emplace_back(x, y);
     }
+}
+
+void TravelingSalesmanSolver::startSolving()
+{
+    if (m_solving.joinable())
+    {
+        m_solving.join();
+    }
+    m_solving = std::thread(&TravelingSalesmanSolver::_startSolving, this);
+}
+
+void TravelingSalesmanSolver::_startSolving()
+{
+    m_isSolving = true;
+    m_isInterrupt = false;
+
+    greedyAlgorithm();
+
+    m_isSolving = false;
 }
 
 void TravelingSalesmanSolver::greedyAlgorithm()
@@ -49,7 +72,7 @@ void TravelingSalesmanSolver::greedyAlgorithm()
     while (m_route.size() < m_points.size())
     {
         Point2D* currentPoint = m_route.back();
-        Point2D* closestNeighbour = nullptr;
+        int closestNeighbourIndex = -1;
 
         float minSquaredDistance = std::numeric_limits<float>::max();
         for (int i = 0; i < m_points.size(); ++i)
@@ -64,11 +87,12 @@ void TravelingSalesmanSolver::greedyAlgorithm()
             if (squaredDistance < minSquaredDistance)
             {
                 minSquaredDistance = squaredDistance;
-                closestNeighbour = &m_points.at(i);
-                isVisited.at(i) = true;
+                closestNeighbourIndex = i;
+                
             }
         }
-        m_route.push_back(closestNeighbour);
+        m_route.push_back(&m_points.at(closestNeighbourIndex));
+        isVisited.at(closestNeighbourIndex) = true;
     }
 
     m_route.push_back(&m_points.at(startPointIndex));
