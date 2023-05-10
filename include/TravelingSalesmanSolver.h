@@ -19,7 +19,7 @@ class TravelingSalesmanSolver
 	std::vector<Point2D> m_points;
 	std::vector<Point2D*> m_route;
 
-	unsigned int m_timeStepNanoseconds = 0;
+	unsigned int m_timeStepNanoseconds = 100;
 	SolvingAlgorithm m_selectedAlgorithm = RANDOM;
 
 	std::thread m_solving;
@@ -32,9 +32,10 @@ public:
 
 	bool isSolving() const { return m_isSolving; };
 
-	const std::vector<Point2D>& getPoints() const { return m_points; };
-	int getNumberOfPoints() const { return m_points.size(); };
+	bool isInterrupt() const { return m_isInterrupt; };
+	void interruptSolving() { m_isInterrupt = true; };
 
+	const std::vector<Point2D>& getPoints() const { return m_points; };
 	const std::vector<Point2D*>& getRoute() const { return m_route; };
 	
 	unsigned int getTimeStep() const { return m_timeStepNanoseconds; };
@@ -55,9 +56,9 @@ public:
 	void generatePoints(int numberOfPoints);
 
 	void startSolving();
-	void _startSolving();
 
 private:
+	void _startSolving();
 	void greedyAlgorithm();
 
 

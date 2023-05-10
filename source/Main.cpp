@@ -24,13 +24,15 @@ void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeftY, float width, float height, glm::vec3 color);
 static Vertex* createRoute(Vertex* target, float x, float y, glm::vec3 color);
+static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd);
 
 const float INITIAL_SCREEN_WIDTH = 800.0f;
 const float INITIAL_SCREEN_HEIGHT = 600.0f;
 
-const unsigned int MAX_POINT_COUNT = 100;
+const unsigned int MAX_POINT_COUNT = 1000;
 
-const float POINT_RADIUS = 10.0f;
+const float POINT_RADIUS = 0.5f;
+const float PADDING = 10.0f;
 
 int main()
 {
@@ -63,7 +65,7 @@ int main()
 
 	const unsigned int MAX_POINTS_VERTEX_COUNT = MAX_POINT_COUNT * 4;
 	const unsigned int MAX_POINTS_INDEX_COUNT = MAX_POINT_COUNT * 6;
-	const unsigned int MAX_LINES_VERTEX_COUNT = MAX_POINT_COUNT;
+	const unsigned int MAX_LINES_VERTEX_COUNT = MAX_POINT_COUNT + 1;
 	const unsigned int MAX_LINES_INDEX_COUNT = MAX_POINT_COUNT * 2;
 
 	unsigned int pointsIndices[MAX_POINTS_INDEX_COUNT], linesIndices[MAX_LINES_INDEX_COUNT];
@@ -134,7 +136,8 @@ int main()
 	Shader pointShader("shaders/DefaultShader.vert", "shaders/PointShader.frag");
 	Shader lineShader("shaders/DefaultShader.vert", "shaders/LineShader.frag");
 
-	TravelingSalesmanSolver solver(10, 0, 800, 0, 600);
+	TravelingSalesmanSolver solver(1000, 0, 10000, 0, 10000);
+	solver.startSolving();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -149,37 +152,45 @@ int main()
 		{
 			const std::vector<Point2D>& points = solver.getPoints();
 
-			std::array<Vertex, MAX_POINTS_VERTEX_COUNT> vertices;
-			Vertex* buffer = vertices.data();
+			std::array<Vertex, MAX_POINTS_VERTEX_COUNT> pointVertices;
+			Vertex* buffer = pointVertices.data();
 
 			for (const Point2D& point : points)
 			{
+				const int lowerLeftX = mapNumberToRange(point.getX() - POINT_RADIUS, 
+					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+				const int lowerLeftY = mapNumberToRange(point.getY() - POINT_RADIUS,
+					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createRectangle(buffer, point.getX() - POINT_RADIUS, point.getY() - POINT_RADIUS,
+				buffer = createRectangle(buffer, lowerLeftX, lowerLeftY,
 					POINT_RADIUS * 2, POINT_RADIUS * 2, point.getColor());
 				pointIndexCounter += 6;
 			}
 
 			glBindBuffer(GL_ARRAY_BUFFER, pointsVBO);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+			glBufferSubData(GL_ARRAY_BUFFER, 0, pointVertices.size() * sizeof(Vertex), pointVertices.data());
 		}
 
 		{
-			const std::vector<Point2D*> route = solver.getRoute();
+			const std::vector<Point2D*>& route = solver.getRoute();
 
-			std::array<Vertex, MAX_LINES_VERTEX_COUNT> vertices;
-			Vertex* buffer = vertices.data();
+			std::array<Vertex, MAX_LINES_VERTEX_COUNT> routeVertices;
+			Vertex* buffer = routeVertices.data();
 
 			for (const Point2D* point : route)
 			{
+				const int centerX = mapNumberToRange(point->getX(),
+					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+				const int centerY = mapNumberToRange(point->getY(),
+					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createRoute(buffer, point->getX(), point->getY(), point->getColor());
+				buffer = createRoute(buffer, centerX, centerY, point->getColor());
 				lineIndexCounter += 2;
 			}
 			lineIndexCounter -= 2;
 
 			glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+			glBufferSubData(GL_ARRAY_BUFFER, 0, routeVertices.size() * sizeof(Vertex), routeVertices.data());
 		}
 
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -187,17 +198,17 @@ int main()
 
 		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
 
-		pointShader.use();
-		pointShader.setMat4("projectionMatrix", projectionMatrix);
-
-		glBindVertexArray(pointsVAO);
-		glDrawElements(GL_TRIANGLES, pointIndexCounter, GL_UNSIGNED_INT, nullptr);
-
 		lineShader.use();
 		lineShader.setMat4("projectionMatrix", projectionMatrix);
 
 		glBindVertexArray(linesVAO);
 		glDrawElements(GL_LINES, lineIndexCounter, GL_UNSIGNED_INT, nullptr);
+
+		pointShader.use();
+		pointShader.setMat4("projectionMatrix", projectionMatrix);
+
+		glBindVertexArray(pointsVAO);
+		glDrawElements(GL_TRIANGLES, pointIndexCounter, GL_UNSIGNED_INT, nullptr);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -213,11 +224,12 @@ void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
+		solver.interruptSolving();
 	}
-	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
-	{
-		solver.startSolving();
-	}
+	//if (!solver.isSolving() && glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+	//{
+	//	solver.startSolving();
+	//}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -253,4 +265,11 @@ static Vertex* createRoute(Vertex* target, float x, float y, glm::vec3 color)
 	++target;
 
 	return target;
+}
+
+static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd)
+{
+	// https://stackoverflow.com/questions/5731863/mapping-a-numeric-range-onto-another
+	float slope = (outputEnd - outputStart) / (inputEnd - inputStart);
+	return outputStart + slope * (input - inputStart);
 }

@@ -36,6 +36,8 @@ void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
 
         m_points.emplace_back(x, y);
     }
+
+    m_route.reserve(numberOfPoints + 1);
 }
 
 void TravelingSalesmanSolver::startSolving()
@@ -71,6 +73,11 @@ void TravelingSalesmanSolver::greedyAlgorithm()
 
     while (m_route.size() < m_points.size())
     {
+        if (isInterrupt())
+        {
+            return;
+        }
+
         Point2D* currentPoint = m_route.back();
         int closestNeighbourIndex = -1;
 
@@ -93,6 +100,8 @@ void TravelingSalesmanSolver::greedyAlgorithm()
         }
         m_route.push_back(&m_points.at(closestNeighbourIndex));
         isVisited.at(closestNeighbourIndex) = true;
+
+        std::this_thread::sleep_for(std::chrono::nanoseconds(m_timeStepNanoseconds));
     }
 
     m_route.push_back(&m_points.at(startPointIndex));
