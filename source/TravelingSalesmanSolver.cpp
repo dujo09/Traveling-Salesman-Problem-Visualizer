@@ -1,5 +1,7 @@
 #include "TravelingSalesmanSolver.h"
 
+#include "SolvingAlgorithms.h"
+
 #include <random>
 #include <limits>
 
@@ -54,55 +56,7 @@ void TravelingSalesmanSolver::_startSolving()
     m_isSolving = true;
     m_isInterrupt = false;
 
-    greedyAlgorithm();
+    SolvingAlgorithms::greedyAlgorithm(m_timeStepNanoseconds, m_isInterrupt, m_points, m_route);
 
     m_isSolving = false;
-}
-
-void TravelingSalesmanSolver::greedyAlgorithm()
-{
-    m_route.clear();
-    std::vector<bool> isVisited(m_points.size(), false);
-
-    std::random_device rd;
-    std::uniform_int_distribution<int> distribution(0, m_points.size() - 1);
-    
-    const int startPointIndex = distribution(rd);
-    m_route.push_back(&m_points.at(startPointIndex));
-    isVisited.at(startPointIndex) = true;
-
-    while (m_route.size() < m_points.size())
-    {
-        if (isInterrupt())
-        {
-            return;
-        }
-
-        Point2D* currentPoint = m_route.back();
-        int closestNeighbourIndex = -1;
-
-        float minSquaredDistance = std::numeric_limits<float>::max();
-        for (int i = 0; i < m_points.size(); ++i)
-        {
-            if (isVisited.at(i))
-            {
-                continue;
-            }
-
-            const float squaredDistance = currentPoint->getSquaredDistanceToPoint(m_points.at(i));
-
-            if (squaredDistance < minSquaredDistance)
-            {
-                minSquaredDistance = squaredDistance;
-                closestNeighbourIndex = i;
-                
-            }
-        }
-        m_route.push_back(&m_points.at(closestNeighbourIndex));
-        isVisited.at(closestNeighbourIndex) = true;
-
-        std::this_thread::sleep_for(std::chrono::nanoseconds(m_timeStepNanoseconds));
-    }
-
-    m_route.push_back(&m_points.at(startPointIndex));
 }
