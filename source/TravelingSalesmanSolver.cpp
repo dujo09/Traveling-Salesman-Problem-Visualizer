@@ -1,6 +1,5 @@
 #include "TravelingSalesmanSolver.h"
-
-#include "SolvingAlgorithms.h"
+#include "TravelingSalesmanAlgorithms.h"
 
 #include <random>
 #include <limits>
@@ -56,7 +55,7 @@ void TravelingSalesmanSolver::_startSolving()
     m_isSolving = true;
     m_isInterrupt = false;
 
-    SolvingAlgorithms::greedyAlgorithm(m_timeStepNanoseconds, m_isInterrupt, m_points, m_route);
+    TravelingSalesmanAlgorithms::greedyAlgorithm(m_timeStepNanoseconds, m_isInterrupt, m_points, m_route);
 
     m_isSolving = false;
 }

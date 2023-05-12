@@ -5,7 +5,7 @@
 #include <vector>
 #include <atomic>
 
-class SolvingAlgorithms
+class TravelingSalesmanAlgorithms
 {
 public:
 	static void greedyAlgorithm(const unsigned int& timeStepNanoseconds, const std::atomic<bool>& isInterrupt, 

@@ -23,7 +23,7 @@ struct Vertex
 void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeftY, float width, float height, glm::vec3 color);
-static Vertex* createRoute(Vertex* target, float x, float y, glm::vec3 color);
+static Vertex* createPointOnRoute(Vertex* target, float x, float y, glm::vec3 color);
 static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd);
 
 const float INITIAL_SCREEN_WIDTH = 800.0f;
@@ -68,7 +68,7 @@ int main()
 	const unsigned int MAX_LINES_VERTEX_COUNT = MAX_POINT_COUNT + 1;
 	const unsigned int MAX_LINES_INDEX_COUNT = MAX_POINT_COUNT * 2;
 
-	unsigned int pointsIndices[MAX_POINTS_INDEX_COUNT], linesIndices[MAX_LINES_INDEX_COUNT];
+	unsigned int pointsIndices[MAX_POINTS_INDEX_COUNT];
 
 	int offset = 0;
 	for (int i = 0; i < MAX_POINTS_INDEX_COUNT; i += 6)
@@ -84,17 +84,19 @@ int main()
 		offset += 4;
 	}
 
+
+	unsigned int routeIndices[MAX_LINES_INDEX_COUNT];
+
 	offset = 0;
 	for (int i = 0; i < MAX_LINES_INDEX_COUNT; i += 2)
 	{
-		linesIndices[i + 0] = 0 + offset;
-		linesIndices[i + 1] = 1 + offset;
+		routeIndices[i + 0] = 0 + offset;
+		routeIndices[i + 1] = 1 + offset;
 
 		offset += 1;
 	}
 
 	unsigned int pointsVAO, pointsVBO, pointsEBO;
-	unsigned int linesVAO, linesVBO, linesEBO;
 
 	glGenVertexArrays(1, &pointsVAO);
 	glGenBuffers(1, &pointsVBO);
@@ -112,7 +114,10 @@ int main()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, color));
 	glEnableVertexAttribArray(1);
-	
+
+
+	unsigned int linesVAO, linesVBO, linesEBO;	
+
 	glGenVertexArrays(1, &linesVAO);
 	glGenBuffers(1, &linesVBO);
 	glGenBuffers(1, &linesEBO);
@@ -123,7 +128,7 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, MAX_LINES_VERTEX_COUNT * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesEBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(linesIndices), linesIndices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(routeIndices), routeIndices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
 	glEnableVertexAttribArray(0);
@@ -146,9 +151,9 @@ int main()
 		int screenWidth, screenHeight;
 		glfwGetWindowSize(window, &screenWidth, &screenHeight);
 
-		int pointIndexCounter = 0, lineIndexCounter = 0;
 
-		
+		unsigned int pointIndexCount = 0;
+
 		{
 			const std::vector<Point2D>& points = solver.getPoints();
 
@@ -157,19 +162,22 @@ int main()
 
 			for (const Point2D& point : points)
 			{
-				const int lowerLeftX = mapNumberToRange(point.getX() - POINT_RADIUS, 
+				const float pointLowerLeftXOnScreen = mapNumberToRange(point.getX() - POINT_RADIUS,
 					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
-				const int lowerLeftY = mapNumberToRange(point.getY() - POINT_RADIUS,
+				const float pointLowerLeftYOnScreen = mapNumberToRange(point.getY() - POINT_RADIUS,
 					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createRectangle(buffer, lowerLeftX, lowerLeftY,
+				buffer = createRectangle(buffer, pointLowerLeftXOnScreen, pointLowerLeftYOnScreen, 
 					POINT_RADIUS * 2, POINT_RADIUS * 2, point.getColor());
-				pointIndexCounter += 6;
+				pointIndexCount += 6;
 			}
 
 			glBindBuffer(GL_ARRAY_BUFFER, pointsVBO);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, pointVertices.size() * sizeof(Vertex), pointVertices.data());
 		}
+
+
+		unsigned int lineIndexCount = 0;
 
 		{
 			const std::vector<Point2D*>& route = solver.getRoute();
@@ -179,15 +187,15 @@ int main()
 
 			for (const Point2D* point : route)
 			{
-				const int centerX = mapNumberToRange(point->getX(),
+				const int pointCenterXOnScreen = mapNumberToRange(point->getX(),
 					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
-				const int centerY = mapNumberToRange(point->getY(),
+				const int pointCenterYOnScreen = mapNumberToRange(point->getY(),
 					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createRoute(buffer, centerX, centerY, point->getColor());
-				lineIndexCounter += 2;
+				buffer = createPointOnRoute(buffer, pointCenterXOnScreen, pointCenterYOnScreen, point->getColor());
+				lineIndexCount += 2;
 			}
-			lineIndexCounter -= 2;
+			lineIndexCount -= 2;
 
 			glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, routeVertices.size() * sizeof(Vertex), routeVertices.data());
@@ -197,18 +205,20 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
+		
 
 		lineShader.use();
 		lineShader.setMat4("projectionMatrix", projectionMatrix);
 
 		glBindVertexArray(linesVAO);
-		glDrawElements(GL_LINES, lineIndexCounter, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_LINES, lineIndexCount, GL_UNSIGNED_INT, nullptr);
+
 
 		pointShader.use();
 		pointShader.setMat4("projectionMatrix", projectionMatrix);
 
 		glBindVertexArray(pointsVAO);
-		glDrawElements(GL_TRIANGLES, pointIndexCounter, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, pointIndexCount, GL_UNSIGNED_INT, nullptr);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -226,10 +236,6 @@ void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver)
 		glfwSetWindowShouldClose(window, true);
 		solver.interruptSolving();
 	}
-	//if (!solver.isSolving() && glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
-	//{
-	//	solver.startSolving();
-	//}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -258,7 +264,7 @@ static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeft
 	return target;
 }
 
-static Vertex* createRoute(Vertex* target, float x, float y, glm::vec3 color)
+static Vertex* createPointOnRoute(Vertex* target, float x, float y, glm::vec3 color)
 {
 	target->position = glm::vec2(x, y);
 	target->color = color;
