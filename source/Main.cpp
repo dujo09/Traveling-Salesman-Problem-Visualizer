@@ -35,7 +35,7 @@ static void glfw_error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeftY, float width, float height, glm::vec3 color);
-static Vertex* createPointOnRoute(Vertex* target, float x, float y, glm::vec3 color);
+static Vertex* createLine(Vertex* target, float xStart, float yStart, int xEnd, int yEnd, glm::vec3 color);
 static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd);
 
 const float INITIAL_SCREEN_WIDTH = 1280.0f;
@@ -43,7 +43,7 @@ const float INITIAL_SCREEN_HEIGHT = 720.0f;
 
 const unsigned int MAX_POINT_COUNT = 1000;
 
-const float POINT_RADIUS = 20.0f;
+const float POINT_RADIUS = 5.0f;
 const float PADDING = 0.0f;
 
 int main()
@@ -111,8 +111,7 @@ int main()
 
 	const unsigned int MAX_POINTS_VERTEX_COUNT = MAX_POINT_COUNT * 4;
 	const unsigned int MAX_POINTS_INDEX_COUNT = MAX_POINT_COUNT * 6;
-	const unsigned int MAX_LINES_VERTEX_COUNT = MAX_POINT_COUNT + 1;
-	const unsigned int MAX_LINES_INDEX_COUNT = MAX_POINT_COUNT * 2;
+	const unsigned int MAX_LINES_VERTEX_COUNT = MAX_POINT_COUNT * 2;
 
 	unsigned int pointsIndices[MAX_POINTS_INDEX_COUNT];
 
@@ -128,18 +127,6 @@ int main()
 		pointsIndices[i + 5] = 0 + offset;
 
 		offset += 4;
-	}
-
-
-	unsigned int routeIndices[MAX_LINES_INDEX_COUNT];
-
-	offset = 0;
-	for (int i = 0; i < MAX_LINES_INDEX_COUNT; i += 2)
-	{
-		routeIndices[i + 0] = 0 + offset;
-		routeIndices[i + 1] = 1 + offset;
-
-		offset += 1;
 	}
 
 	unsigned int pointsVAO, pointsVBO, pointsEBO;
@@ -162,19 +149,15 @@ int main()
 	glEnableVertexAttribArray(1);
 
 
-	unsigned int linesVAO, linesVBO, linesEBO;	
+	unsigned int linesVAO, linesVBO;	
 
 	glGenVertexArrays(1, &linesVAO);
 	glGenBuffers(1, &linesVBO);
-	glGenBuffers(1, &linesEBO);
 
 	glBindVertexArray(linesVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
 	glBufferData(GL_ARRAY_BUFFER, MAX_LINES_VERTEX_COUNT * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesEBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(routeIndices), routeIndices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
 	glEnableVertexAttribArray(0);
@@ -222,25 +205,31 @@ int main()
 		}
 
 
-		unsigned int lineIndexCount = 0;
+		unsigned int routeVertexCount = 0;
 
 		{
 			const std::vector<Point2D*>& route = solver.getRoute();
+			int routeLength = route.size();
 
 			std::array<Vertex, MAX_LINES_VERTEX_COUNT> routeVertices;
 			Vertex* buffer = routeVertices.data();
 
-			for (const Point2D* point : route)
+			for (int i = 0; i < routeLength - 1; ++i)
 			{
-				const int pointCenterXOnScreen = mapNumberToRange(point->getX(),
+				const int lineXStartOnScreen = mapNumberToRange(route.at(i)->getX(),
 					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
-				const int pointCenterYOnScreen = mapNumberToRange(point->getY(),
+				const int lineYStartOnScreen = mapNumberToRange(route.at(i)->getY(),
 					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createPointOnRoute(buffer, pointCenterXOnScreen, pointCenterYOnScreen, point->getColor());
-				lineIndexCount += 2;
+				const int lineXEndOnScreen = mapNumberToRange(route.at(i + 1)->getX(),
+					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+				const int lineYEndOnScreen = mapNumberToRange(route.at(i + 1)->getY(),
+					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
+
+				buffer = createLine(buffer, lineXStartOnScreen, lineYStartOnScreen, 
+					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getColor());
+				routeVertexCount += 2;
 			}
-			lineIndexCount -= 2;
 
 			glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, routeVertices.size() * sizeof(Vertex), routeVertices.data());
@@ -277,10 +266,6 @@ int main()
 
 			if (ImGui::SliderInt("Number of points", &numberOfPoints, 3, MAX_POINT_COUNT))
 			{
-				if (solver.isSolving())
-				{
-					break;
-				}
 				solver.generatePoints(numberOfPoints);
 			}
 
@@ -289,10 +274,6 @@ int main()
 				ImGui::RadioButton("Greedy algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::GREEDY) ||
 				ImGui::RadioButton("2-Opt algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::TWO_OPT))
 			{
-				if (solver.isSolving())
-				{
-					break;
-				}
 				solver.setSolvingAlgorithm(SolvingAlgorithm(selectedAlgorithmIndex));
 			}
 
@@ -324,7 +305,7 @@ int main()
 		lineShader.setMat4("projectionMatrix", projectionMatrix);
 
 		glBindVertexArray(linesVAO);
-		glDrawElements(GL_LINES, lineIndexCount, GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_LINES, 0, routeVertexCount);
 
 
 		pointShader.use();
@@ -382,9 +363,13 @@ static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeft
 	return target;
 }
 
-static Vertex* createPointOnRoute(Vertex* target, float x, float y, glm::vec3 color)
+static Vertex* createLine(Vertex* target, float xStart, float yStart, int xEnd, int yEnd, glm::vec3 color)
 {
-	target->position = glm::vec2(x, y);
+	target->position = glm::vec2(xStart, yStart);
+	target->color = color;
+	++target;
+
+	target->position = glm::vec2(xEnd, yEnd);
 	target->color = color;
 	++target;
 

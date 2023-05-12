@@ -26,6 +26,11 @@ TravelingSalesmanSolver::~TravelingSalesmanSolver()
 
 void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
 {
+    if (m_isSolving)
+    {
+        return;
+    }
+
 	std::random_device rd;
 	std::uniform_real_distribution<double> xDistribution(m_xMin, m_xMax);
 	std::uniform_real_distribution<double> yDistribution(m_yMin, m_yMax);

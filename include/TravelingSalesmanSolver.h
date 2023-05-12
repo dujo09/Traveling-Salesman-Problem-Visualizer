@@ -57,7 +57,15 @@ public:
 	};
 
 	SolvingAlgorithm getSelectedAlgorithm() { return m_selectedAlgorithm; };
-	void setSolvingAlgorithm(SolvingAlgorithm solvingAlgorithm) { m_selectedAlgorithm = solvingAlgorithm; };
+	void setSolvingAlgorithm(SolvingAlgorithm solvingAlgorithm) 
+	{ 
+		if (m_isSolving)
+		{
+			return;
+		}
+
+		m_selectedAlgorithm = solvingAlgorithm; 
+	};
 
 	int getRouteLength() const { return m_routeLength; };
 
