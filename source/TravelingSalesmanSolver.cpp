@@ -4,6 +4,8 @@
 #include <random>
 #include <limits>
 
+int TravelingSalesmanSolver::MAX_TIME_STEP_MILLISECONDS = 1000;
+
 TravelingSalesmanSolver::TravelingSalesmanSolver(int numberOfPoints, float xMin, float xMax, float yMin, float yMax)
 {
     m_xMin = xMin;
@@ -43,6 +45,11 @@ void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
 
 void TravelingSalesmanSolver::startSolving()
 {
+    if (m_isSolving)
+    {
+        return;
+    }
+
     if (m_solving.joinable())
     {
         m_solving.join();
@@ -55,7 +62,7 @@ void TravelingSalesmanSolver::_startSolving()
     m_isSolving = true;
     m_isInterrupt = false;
 
-    TravelingSalesmanAlgorithms::greedyAlgorithm(m_timeStepNanoseconds, m_isInterrupt, m_points, m_route);
+    TravelingSalesmanAlgorithms::greedyAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
 
     m_isSolving = false;
 }

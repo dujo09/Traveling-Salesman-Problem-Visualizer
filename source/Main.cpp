@@ -3,10 +3,18 @@
 #include "Point2D.h"
 
 #include <glad/glad.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#define GL_SILENCE_DEPRECATION
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <GLES2/gl2.h>
+#endif
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 
 #include <iostream>
 #include <string>
@@ -20,26 +28,36 @@ struct Vertex
 	glm::vec3 color;
 };
 
+
+
 void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver);
+static void glfw_error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeftY, float width, float height, glm::vec3 color);
 static Vertex* createPointOnRoute(Vertex* target, float x, float y, glm::vec3 color);
 static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd);
 
-const float INITIAL_SCREEN_WIDTH = 800.0f;
-const float INITIAL_SCREEN_HEIGHT = 600.0f;
+const float INITIAL_SCREEN_WIDTH = 1280.0f;
+const float INITIAL_SCREEN_HEIGHT = 720.0f;
 
 const unsigned int MAX_POINT_COUNT = 1000;
 
-const float POINT_RADIUS = 0.5f;
-const float PADDING = 10.0f;
+const float POINT_RADIUS = 20.0f;
+const float PADDING = 0.0f;
 
 int main()
 {
+	// GLFW setup
+	// ----------
+	glfwSetErrorCallback(glfw_error_callback);
+
 	glfwInit();
+	const char* glsl_version = "#version 330";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -53,9 +71,37 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+	// glfwSwapInterval(1);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetWindowSizeLimits(window, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
+	// ImGUI setup
+	// -----------
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+	//io.ConfigViewportsNoAutoMerge = true;
+	//io.ConfigViewportsNoTaskBarIcon = true;
+
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	// glad setup
+	// -----------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to load GLAD function\n";
@@ -141,8 +187,7 @@ int main()
 	Shader pointShader("shaders/DefaultShader.vert", "shaders/PointShader.frag");
 	Shader lineShader("shaders/DefaultShader.vert", "shaders/LineShader.frag");
 
-	TravelingSalesmanSolver solver(1000, 0, 10000, 0, 10000);
-	solver.startSolving();
+	TravelingSalesmanSolver solver(10, 0, 10000, 0, 10000);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -201,10 +246,78 @@ int main()
 			glBufferSubData(GL_ARRAY_BUFFER, 0, routeVertices.size() * sizeof(Vertex), routeVertices.data());
 		}
 
+		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		{
+			int timeStepMilliseconds = solver.getTimeStep();
+			int numberOfPoints = solver.getNumberOfPoints();
+			int selectedAlgorithmIndex = solver.getSelectedAlgorithm();
+
+			ImGui::Begin("Control window");
+
+			if (ImGui::Button("Start solving"))
+			{
+				solver.startSolving();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Interrupt solving"))
+			{
+				solver.interruptSolving();
+			}
+
+			ImGui::Text("Configure solver");
+			if (ImGui::SliderInt("Time step (milliseconds)", &timeStepMilliseconds, 0.0f, TravelingSalesmanSolver::MAX_TIME_STEP_MILLISECONDS))
+			{
+				solver.setTimeStep(timeStepMilliseconds);
+			}
+
+			if (ImGui::SliderInt("Number of points", &numberOfPoints, 3, MAX_POINT_COUNT))
+			{
+				if (solver.isSolving())
+				{
+					break;
+				}
+				solver.generatePoints(numberOfPoints);
+			}
+
+			ImGui::Text("Choose algorithm");
+			if (ImGui::RadioButton("Random algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::RANDOM) ||
+				ImGui::RadioButton("Greedy algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::GREEDY) ||
+				ImGui::RadioButton("2-Opt algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::TWO_OPT))
+			{
+				if (solver.isSolving())
+				{
+					break;
+				}
+				solver.setSolvingAlgorithm(SolvingAlgorithm(selectedAlgorithmIndex));
+			}
+
+			ImGui::Text("Results");
+			ImGui::Text("Route length: %d", solver.getRouteLength());
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::End();
+		}
+		
+		ImGui::Render();
+		int display_w, display_h;
+		glfwGetFramebufferSize(window, &display_w, &display_h);
+		glViewport(0, 0, display_w, display_h);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backup_current_context);
+		}
 		
 
 		lineShader.use();
@@ -236,6 +349,11 @@ void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver)
 		glfwSetWindowShouldClose(window, true);
 		solver.interruptSolving();
 	}
+}
+
+void glfw_error_callback(int error, const char* description)
+{
+	std::cout << "GLFW Error " << error << ": " << description << "\n";
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

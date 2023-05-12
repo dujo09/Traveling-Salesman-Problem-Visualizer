@@ -9,7 +9,9 @@
 enum SolvingAlgorithm
 {
 	RANDOM,
-	GREEDY
+	GREEDY,
+	TWO_OPT,
+
 };
 
 class TravelingSalesmanSolver
@@ -19,12 +21,17 @@ class TravelingSalesmanSolver
 	std::vector<Point2D> m_points;
 	std::vector<Point2D*> m_route;
 
-	unsigned int m_timeStepNanoseconds = 10000;
+	unsigned int m_timeStepMilliseconds = 1000;
 	SolvingAlgorithm m_selectedAlgorithm = RANDOM;
 
 	std::thread m_solving;
 	std::atomic<bool> m_isSolving = false;
 	std::atomic<bool> m_isInterrupt = false;
+
+	int m_routeLength = 0;
+
+public:
+	static int MAX_TIME_STEP_MILLISECONDS;
 
 public:
 	TravelingSalesmanSolver(int numberOfPoints, float xMin, float xMax, float yMin, float yMax);
@@ -36,13 +43,23 @@ public:
 	void interruptSolving() { m_isInterrupt = true; };
 
 	const std::vector<Point2D>& getPoints() const { return m_points; };
+	int getNumberOfPoints() const { return m_points.size(); };
 	const std::vector<Point2D*>& getRoute() const { return m_route; };
 	
-	unsigned int getTimeStep() const { return m_timeStepNanoseconds; };
-	void setTimeStep(int timeStepNanoseconds) { m_timeStepNanoseconds = timeStepNanoseconds; };
+	unsigned int getTimeStep() const { return m_timeStepMilliseconds; };
+	void setTimeStep(int timeStepMilliseconds) 
+	{ 
+		if (timeStepMilliseconds < 0)
+		{
+			return;
+		}
+		m_timeStepMilliseconds = timeStepMilliseconds; 
+	};
 
 	SolvingAlgorithm getSelectedAlgorithm() { return m_selectedAlgorithm; };
 	void setSolvingAlgorithm(SolvingAlgorithm solvingAlgorithm) { m_selectedAlgorithm = solvingAlgorithm; };
+
+	int getRouteLength() const { return m_routeLength; };
 
 	float getXMin() { return m_xMin; };
 	void setXMin(float xMin) { m_xMin = xMin; };

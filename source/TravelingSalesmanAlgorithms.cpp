@@ -4,8 +4,8 @@
 #include <limits>
 #include <thread>
 
-void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepNanoseconds, const std::atomic<bool>& isInterrupt, 
-    std::vector<Point2D>& points, std::vector<Point2D*>& route)
+void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMilliseconds, const std::atomic<bool>& isInterrupt, 
+    std::vector<Point2D>& points, std::vector<Point2D*>& route, int& routeLength)
 {
     if (!route.empty())
     {
@@ -16,6 +16,8 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepNa
         route.reserve(points.size() + 1);
     }
 
+    routeLength = 0;
+
 
     std::random_device rd;
     std::uniform_int_distribution<int> startPointDistribution(0, points.size() - 1);
@@ -25,6 +27,7 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepNa
 
     isVisited.at(startPointIndex) = true;
     route.push_back(&points.at(startPointIndex));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
     
     while (route.size() < points.size())
     {
@@ -32,6 +35,8 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepNa
         {
             return;
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
 
         Point2D* currentPoint = route.back();
         int closestPointIndex = -1;
@@ -54,9 +59,10 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepNa
         }
         // TODO throw exception if closestNeighbourIndex is -1
         route.push_back(&points.at(closestPointIndex));
-        isVisited.at(closestPointIndex) = true;
-
-        std::this_thread::sleep_for(std::chrono::nanoseconds(timeStepNanoseconds));
+        isVisited.at(closestPointIndex) = true; 
+        routeLength += minDistance;
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
     route.push_back(&points.at(startPointIndex));
 }

@@ -8,7 +8,7 @@
 class TravelingSalesmanAlgorithms
 {
 public:
-	static void greedyAlgorithm(const unsigned int& timeStepNanoseconds, const std::atomic<bool>& isInterrupt, 
-		std::vector<Point2D>& points, std::vector<Point2D*>& route);
+	static void greedyAlgorithm(const unsigned int& timeStepMiliseconds, const std::atomic<bool>& isInterrupt, 
+		std::vector<Point2D>& points, std::vector<Point2D*>& route, int& routeLength);
 };
 
