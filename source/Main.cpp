@@ -43,7 +43,7 @@ const float INITIAL_SCREEN_HEIGHT = 720.0f;
 
 const unsigned int MAX_POINT_COUNT = 1000;
 
-const float POINT_RADIUS = 5.0f;
+const float POINT_RADIUS = 50.0f;
 const float PADDING = 0.0f;
 
 int main()
@@ -190,12 +190,15 @@ int main()
 
 			for (const Point2D& point : points)
 			{
-				const float pointLowerLeftXOnScreen = mapNumberToRange(point.getX() - POINT_RADIUS,
+				const float pointCenterXOnScreen = mapNumberToRange(point.getX(),
 					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
-				const float pointLowerLeftYOnScreen = mapNumberToRange(point.getY() - POINT_RADIUS,
+				const float pointCenterYOnScreen = mapNumberToRange(point.getY(),
 					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
 
-				buffer = createRectangle(buffer, pointLowerLeftXOnScreen, pointLowerLeftYOnScreen, 
+				const float pointLowerLeftXOnScreen = pointCenterXOnScreen - POINT_RADIUS;
+				const float pointLowerLeftYOnScreen = pointCenterYOnScreen - POINT_RADIUS;
+
+				buffer = createRectangle(buffer, pointLowerLeftXOnScreen, pointLowerLeftYOnScreen,
 					POINT_RADIUS * 2, POINT_RADIUS * 2, point.getColor());
 				pointIndexCount += 6;
 			}
@@ -365,6 +368,8 @@ static Vertex* createRectangle(Vertex* target, float lowerLeftX, float lowerLeft
 
 static Vertex* createLine(Vertex* target, float xStart, float yStart, int xEnd, int yEnd, glm::vec3 color)
 {
+	color = glm::vec3(1.0f, 0.0f, 0.0f);
+
 	target->position = glm::vec2(xStart, yStart);
 	target->color = color;
 	++target;

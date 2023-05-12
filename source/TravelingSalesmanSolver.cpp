@@ -35,6 +35,7 @@ void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
 	std::uniform_real_distribution<double> xDistribution(m_xMin, m_xMax);
 	std::uniform_real_distribution<double> yDistribution(m_yMin, m_yMax);
 
+    m_route.clear();
     m_points.clear();
 
     for (int i = 0; i < numberOfPoints; ++i)
