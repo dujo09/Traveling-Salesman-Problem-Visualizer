@@ -50,8 +50,10 @@ const float INITIAL_SCREEN_HEIGHT = 720.0f;
 
 const unsigned int MAX_POINT_COUNT = 1000;
 
-const float POINT_RADIUS = 20.0f;
-const float PADDING = 0.0f;
+const float INITIAL_POINT_RADIUS = 10.0f;
+const float MAX_POINT_RADIUS = 30.0f;
+const float MIN_POINT_RADIUS = 1.0f;
+
 
 int main()
 {
@@ -185,6 +187,8 @@ int main()
 
 	TravelingSalesmanSolver solver(10, 0, 10000, 0, 10000);
 
+	float pointRadius = INITIAL_POINT_RADIUS;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window, solver);
@@ -204,15 +208,15 @@ int main()
 			for (const Point2D& point : points)
 			{
 				const float pointCenterXOnScreen = mapNumberToRange(point.getX(),
-					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
 				const float pointCenterYOnScreen = mapNumberToRange(point.getY(),
-					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
+					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
 
-				const float pointLowerLeftXOnScreen = pointCenterXOnScreen - POINT_RADIUS;
-				const float pointLowerLeftYOnScreen = pointCenterYOnScreen - POINT_RADIUS;
+				const float pointLowerLeftXOnScreen = pointCenterXOnScreen - pointRadius;
+				const float pointLowerLeftYOnScreen = pointCenterYOnScreen - pointRadius;
 
 				buffer = createRectangle(buffer, pointLowerLeftXOnScreen, pointLowerLeftYOnScreen,
-					POINT_RADIUS * 2, POINT_RADIUS * 2, point.getColor());
+					pointRadius * 2, pointRadius * 2, point.getColor());
 				pointIndexCount += 6;
 			}
 
@@ -233,14 +237,14 @@ int main()
 			for (int i = 0; i < routeLength - 1; ++i)
 			{
 				const int lineXStartOnScreen = mapNumberToRange(route.at(i)->getX(),
-					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
 				const int lineYStartOnScreen = mapNumberToRange(route.at(i)->getY(),
-					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
+					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
 
 				const int lineXEndOnScreen = mapNumberToRange(route.at(i + 1)->getX(),
-					solver.getXMin(), solver.getXMax(), 0 + PADDING, screenWidth - PADDING);
+					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
 				const int lineYEndOnScreen = mapNumberToRange(route.at(i + 1)->getY(),
-					solver.getYMin(), solver.getYMax(), 0 + PADDING, screenHeight - PADDING);
+					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
 
 				buffer = createLine(buffer, lineXStartOnScreen, lineYStartOnScreen, 
 					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getColor());
@@ -269,18 +273,25 @@ int main()
 				solver.startSolving();
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Interrupt solving"))
+			if (ImGui::Button("Stop solving"))
 			{
 				solver.interruptSolving();
 			}
 
 			ImGui::Text("Configure solver");
+
+			ImGui::SliderFloat("Point radius", &pointRadius, MIN_POINT_RADIUS, MAX_POINT_RADIUS);
+
 			if (ImGui::SliderInt("Time step (milliseconds)", &timeStepMilliseconds, 0.0f, TravelingSalesmanSolver::MAX_TIME_STEP_MILLISECONDS))
 			{
 				solver.setTimeStep(timeStepMilliseconds);
 			}
 
-			if (ImGui::SliderInt("Number of points", &numberOfPoints, 3, MAX_POINT_COUNT))
+			if (ImGui::InputInt("Number of points", &numberOfPoints))
+			{
+				solver.generatePoints(numberOfPoints);
+			}
+			if (ImGui::Button("Regenerate points"))
 			{
 				solver.generatePoints(numberOfPoints);
 			}
