@@ -9,9 +9,10 @@
 class Shader 
 {
 public:
-    unsigned int m_ShaderProgramId = 0;
+    unsigned int m_shaderProgramId = 0;
 
     Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
+    Shader(const char* vertexShaderPath, const char* geometryShaderPath, const char* fragmentShaderPath);
     ~Shader();
 
     void use();

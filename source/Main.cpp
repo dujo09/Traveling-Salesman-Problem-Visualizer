@@ -182,7 +182,7 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Shader pointShader("shaders/PointShader.vert", "shaders/PointShader.frag");
-	Shader lineShader("shaders/LineShader.vert", "shaders/LineShader.frag");
+	Shader lineShader("shaders/LineShader.vert", "shaders/LineShader.geo", "shaders/LineShader.frag");
 
 	TravelingSalesmanSolver solver(10, 0, 10000, 0, 10000);
 
@@ -192,8 +192,8 @@ int main()
 	{
 		glfwPollEvents();
 
-		int screenWidth, screenHeight;
-		glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
+		int displayWidth, displayHeight;
+		glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
 
 
 		unsigned int pointIndexCount = 0;
@@ -207,9 +207,9 @@ int main()
 			for (const Point2D& point : points)
 			{
 				const float pointCenterXOnScreen = mapNumberToRange(point.getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
+					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
 				const float pointCenterYOnScreen = mapNumberToRange(point.getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
+					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
 
 				const float pointLowerLeftXOnScreen = pointCenterXOnScreen - pointRadius;
 				const float pointLowerLeftYOnScreen = pointCenterYOnScreen - pointRadius;
@@ -236,14 +236,14 @@ int main()
 			for (int i = 0; i < routeLength - 1; ++i)
 			{
 				const int lineXStartOnScreen = mapNumberToRange(route.at(i)->getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
+					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
 				const int lineYStartOnScreen = mapNumberToRange(route.at(i)->getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
+					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
 
 				const int lineXEndOnScreen = mapNumberToRange(route.at(i + 1)->getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, screenWidth - pointRadius);
+					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
 				const int lineYEndOnScreen = mapNumberToRange(route.at(i + 1)->getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, screenHeight - pointRadius);
+					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
 
 				buffer = createLine(buffer, lineXStartOnScreen, lineYStartOnScreen, 
 					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getColor());
@@ -254,7 +254,7 @@ int main()
 			glBufferSubData(GL_ARRAY_BUFFER, 0, routeVertices.size() * sizeof(LineVertex), routeVertices.data());
 		}
 
-		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
+		glm::mat4 projectionMatrix = glm::ortho(0.0f, (float)displayWidth, 0.0f, (float)displayHeight, -1.0f, 1.0f);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -315,10 +315,10 @@ int main()
 		}
 		
 		ImGui::Render();
-		int display_w, display_h;
-		glfwGetFramebufferSize(window, &display_w, &display_h);
-		glViewport(0, 0, display_w, display_h);
+		glViewport(0, 0, displayWidth, displayHeight);
+
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
