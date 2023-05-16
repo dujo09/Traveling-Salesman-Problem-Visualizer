@@ -37,7 +37,6 @@ struct PointVertex
 
 
 
-void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver);
 static void glfw_error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -191,10 +190,10 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
-		processInput(window, solver);
+		glfwPollEvents();
 
 		int screenWidth, screenHeight;
-		glfwGetWindowSize(window, &screenWidth, &screenHeight);
+		glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 
 
 		unsigned int pointIndexCount = 0;
@@ -278,9 +277,7 @@ int main()
 				solver.interruptSolving();
 			}
 
-			ImGui::Text("Configure solver");
-
-			ImGui::SliderFloat("Point radius", &pointRadius, MIN_POINT_RADIUS, MAX_POINT_RADIUS);
+			ImGui::NewLine();
 
 			if (ImGui::SliderInt("Time step (milliseconds)", &timeStepMilliseconds, 0.0f, TravelingSalesmanSolver::MAX_TIME_STEP_MILLISECONDS))
 			{
@@ -296,7 +293,12 @@ int main()
 				solver.generatePoints(numberOfPoints);
 			}
 
-			ImGui::Text("Choose algorithm");
+			ImGui::NewLine();
+
+			ImGui::SliderFloat("Point radius", &pointRadius, MIN_POINT_RADIUS, MAX_POINT_RADIUS);
+
+			ImGui::NewLine();
+
 			if (ImGui::RadioButton("Random algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::RANDOM) ||
 				ImGui::RadioButton("Greedy algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::GREEDY) ||
 				ImGui::RadioButton("2-Opt algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::TWO_OPT))
@@ -304,7 +306,8 @@ int main()
 				solver.setSolvingAlgorithm(SolvingAlgorithm(selectedAlgorithmIndex));
 			}
 
-			ImGui::Text("Results");
+			ImGui::NewLine();
+
 			ImGui::Text("Route length: %d", solver.getRouteLength());
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -348,15 +351,6 @@ int main()
 	glfwTerminate();
 
 	return 0;
-}
-
-void processInput(GLFWwindow*& window, TravelingSalesmanSolver& solver)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true);
-		solver.interruptSolving();
-	}
 }
 
 void glfw_error_callback(int error, const char* description)
