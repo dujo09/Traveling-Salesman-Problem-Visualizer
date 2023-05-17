@@ -53,6 +53,9 @@ const float INITIAL_POINT_RADIUS = 10.0f;
 const float MAX_POINT_RADIUS = 30.0f;
 const float MIN_POINT_RADIUS = 1.0f;
 
+const float INITIAL_LINE_WIDTH = 2.0f;
+const float MIN_LINE_WIDTH = 1.0f;
+
 
 int main()
 {
@@ -187,6 +190,7 @@ int main()
 	TravelingSalesmanSolver solver(10, 0, 10000, 0, 10000);
 
 	float pointRadius = INITIAL_POINT_RADIUS;
+	float lineWidth = INITIAL_LINE_WIDTH;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -295,7 +299,11 @@ int main()
 
 			ImGui::NewLine();
 
-			ImGui::SliderFloat("Point radius", &pointRadius, MIN_POINT_RADIUS, MAX_POINT_RADIUS);
+			if (ImGui::SliderFloat("Point radius", &pointRadius, MIN_POINT_RADIUS, MAX_POINT_RADIUS, "%.1f"))
+			{
+				lineWidth = std::min(lineWidth, pointRadius * 2.0f);
+			}
+			ImGui::SliderFloat("Line width", &lineWidth, MIN_LINE_WIDTH, pointRadius * 2.0f, "%.1f");
 
 			ImGui::NewLine();
 
@@ -317,6 +325,7 @@ int main()
 		ImGui::Render();
 		glViewport(0, 0, displayWidth, displayHeight);
 
+
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -333,6 +342,8 @@ int main()
 
 		lineShader.use();
 		lineShader.setMat4("projectionMatrix", projectionMatrix);
+		lineShader.setVec2("viewportSize", (float)displayWidth, (float)displayHeight);
+		lineShader.setFloat("lineWidth", lineWidth);
 
 		glBindVertexArray(linesVAO);
 		glDrawArrays(GL_LINES, 0, routeVertexCount);
