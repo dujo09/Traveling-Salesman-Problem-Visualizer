@@ -52,6 +52,7 @@ void main()
     gl_Position = vec4( (gl_in[0].gl_Position.xy - normal) * gl_in[0].gl_Position.w, gl_in[0].gl_Position.zw );
     EmitVertex();
 
+    // gs_out.color = mix(gs_in[0].color, mixColor, gs_in[0].color);
     gs_out.u = lineWidthTotal;
     gs_out.lineWidth = lineWidthTotal;
     gs_out.lineLength = lineLength * 0.5f;

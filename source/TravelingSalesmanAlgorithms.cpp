@@ -1,4 +1,5 @@
 #include "TravelingSalesmanAlgorithms.h"
+#include "SolverColors.h"
 
 #include <random>
 #include <limits>
@@ -27,8 +28,10 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
 
     isVisited.at(startPointIndex) = true;
     route.push_back(&points.at(startPointIndex));
-    //std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
-    
+
+    points.at(startPointIndex).setColor(SolverColors::POINT_HIGHLIGHT_COLOR);
+    points.at(startPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR);
+
     while (route.size() < points.size())
     {
         if (isInterrupt)
@@ -61,8 +64,13 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
         route.push_back(&points.at(closestPointIndex));
         isVisited.at(closestPointIndex) = true; 
         routeLength += minDistance;
+
+        points.at(closestPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
+
     route.push_back(&points.at(startPointIndex));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds)); 
 }

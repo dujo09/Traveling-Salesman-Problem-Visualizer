@@ -163,6 +163,7 @@
     <ClInclude Include="dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\SolverColors.h" />
     <ClInclude Include="include\TravelingSalesmanSolver.h" />
     <ClInclude Include="include\Point2D.h" />
     <ClInclude Include="include\TravelingSalesmanAlgorithms.h" />

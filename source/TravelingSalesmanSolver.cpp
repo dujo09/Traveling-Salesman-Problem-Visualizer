@@ -1,5 +1,6 @@
 #include "TravelingSalesmanSolver.h"
 #include "TravelingSalesmanAlgorithms.h"
+#include "SolverColors.h"
 
 #include <random>
 #include <limits>
@@ -68,7 +69,28 @@ void TravelingSalesmanSolver::_startSolving()
     m_isSolving = true;
     m_isInterrupt = false;
 
+    setAllPointsColors(SolverColors::DEFAULT_COLOR);
+
     TravelingSalesmanAlgorithms::greedyAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
 
+    setAllPointsColors(SolverColors::COMPLETE_COLOR);
+    setWholeRouteColor(SolverColors::COMPLETE_COLOR);
+
     m_isSolving = false;
+}
+
+void TravelingSalesmanSolver::setAllPointsColors(glm::vec3 color)
+{
+    for (Point2D& point : m_points)
+    {
+        point.setColor(color);
+    }
+}
+
+void TravelingSalesmanSolver::setWholeRouteColor(glm::vec3 color)
+{
+    for (Point2D& point : m_points)
+    {
+        point.setOutgoingLineColor(color);
+    }
 }

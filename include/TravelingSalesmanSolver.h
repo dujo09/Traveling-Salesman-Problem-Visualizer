@@ -84,7 +84,8 @@ public:
 
 private:
 	void _startSolving();
-
+	void setAllPointsColors(glm::vec3 color);
+	void setWholeRouteColor(glm::vec3 color);
 
 };
 

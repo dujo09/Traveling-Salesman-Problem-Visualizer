@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "TravelingSalesmanSolver.h"
 #include "Point2D.h"
+#include "SolverColors.h"
 
 #include <glad/glad.h>
 #include "imgui.h"
@@ -49,11 +50,11 @@ const float INITIAL_SCREEN_HEIGHT = 720.0f;
 
 const unsigned int MAX_POINT_COUNT = 1000;
 
-const float INITIAL_POINT_RADIUS = 10.0f;
+const float INITIAL_POINT_RADIUS = 15.0f;
 const float MAX_POINT_RADIUS = 30.0f;
 const float MIN_POINT_RADIUS = 1.0f;
 
-const float INITIAL_LINE_WIDTH = 2.0f;
+const float INITIAL_LINE_WIDTH = 10.0f;
 const float MIN_LINE_WIDTH = 1.0f;
 
 
@@ -250,7 +251,7 @@ int main()
 					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
 
 				buffer = createLine(buffer, lineXStartOnScreen, lineYStartOnScreen, 
-					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getColor());
+					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getOutgoingLineColor());
 				routeVertexCount += 2;
 			}
 
@@ -290,7 +291,11 @@ int main()
 
 			if (ImGui::InputInt("Number of points", &numberOfPoints))
 			{
-				solver.generatePoints(numberOfPoints);
+				if (numberOfPoints > 0 && numberOfPoints < MAX_POINT_COUNT)
+				{
+					solver.generatePoints(numberOfPoints);
+				}
+				
 			}
 			if (ImGui::Button("Regenerate points"))
 			{
@@ -325,8 +330,7 @@ int main()
 		ImGui::Render();
 		glViewport(0, 0, displayWidth, displayHeight);
 
-
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(SolverColors::BACKGROUND_COLOR.x, SolverColors::BACKGROUND_COLOR.y, SolverColors::BACKGROUND_COLOR.z, 0.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -405,8 +409,6 @@ static PointVertex* createRectangle(PointVertex* target, float lowerLeftX, float
 
 static LineVertex* createLine(LineVertex* target, float xStart, float yStart, int xEnd, int yEnd, glm::vec3 color)
 {
-	color = glm::vec3(1.0f, 0.0f, 0.0f);
-
 	target->position = glm::vec2(xStart, yStart);
 	target->color = color;
 	++target;
