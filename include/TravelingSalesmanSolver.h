@@ -28,7 +28,7 @@ class TravelingSalesmanSolver
 	std::atomic<bool> m_isSolving = false;
 	std::atomic<bool> m_isInterrupt = false;
 
-	int m_routeLength = 0;
+	float m_routeLength = 0;
 
 public:
 	static int MAX_TIME_STEP_MILLISECONDS;
@@ -67,7 +67,7 @@ public:
 		m_selectedAlgorithm = solvingAlgorithm; 
 	};
 
-	int getRouteLength() const { return m_routeLength; };
+	float getRouteLength() const { return m_routeLength; };
 
 	float getXMin() { return m_xMin; };
 	void setXMin(float xMin) { m_xMin = xMin; };

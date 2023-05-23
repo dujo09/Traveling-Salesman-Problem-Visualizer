@@ -71,9 +71,8 @@ void TravelingSalesmanSolver::_startSolving()
 
     setAllPointsColors(SolverColors::DEFAULT_COLOR);
 
-    TravelingSalesmanAlgorithms::greedyAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
+    TravelingSalesmanAlgorithms::twoOptAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
 
-    setAllPointsColors(SolverColors::COMPLETE_COLOR);
     setWholeRouteColor(SolverColors::COMPLETE_COLOR);
 
     m_isSolving = false;

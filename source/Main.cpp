@@ -277,6 +277,11 @@ int main()
 				solver.startSolving();
 			}
 			ImGui::SameLine();
+			if (ImGui::Button("Regenerate points"))
+			{
+				solver.generatePoints(numberOfPoints);
+			}
+			ImGui::SameLine();
 			if (ImGui::Button("Stop solving"))
 			{
 				solver.interruptSolving();
@@ -297,10 +302,7 @@ int main()
 				}
 				
 			}
-			if (ImGui::Button("Regenerate points"))
-			{
-				solver.generatePoints(numberOfPoints);
-			}
+
 
 			ImGui::NewLine();
 
@@ -321,7 +323,7 @@ int main()
 
 			ImGui::NewLine();
 
-			ImGui::Text("Route length: %d", solver.getRouteLength());
+			ImGui::Text("Route length: %.3f", solver.getRouteLength());
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
@@ -422,7 +424,7 @@ static LineVertex* createLine(LineVertex* target, float xStart, float yStart, in
 
 static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd)
 {
-	// https://stackoverflow.com/questions/5731863/mapping-a-numeric-range-onto-another
+	// Formula: https://stackoverflow.com/questions/5731863/mapping-a-numeric-range-onto-another
 	float slope = (outputEnd - outputStart) / (inputEnd - inputStart);
 	return outputStart + slope * (input - inputStart);
 }

@@ -13,6 +13,7 @@ namespace SolverColors
 	const glm::vec3 COMPLETE_COLOR = getColorFromRGB(glm::vec3(88, 255, 49));
 	const glm::vec3 LINE_HIGHLIGHT_COLOR = getColorFromRGB(glm::vec3(255, 0, 0));
 	const glm::vec3 POINT_HIGHLIGHT_COLOR = getColorFromRGB(glm::vec3(255, 255, 0));
+	const glm::vec3 POINT_HIGHLIGHT_COLOR_B = getColorFromRGB(glm::vec3(0, 0, 255));
 
 
 }
