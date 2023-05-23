@@ -277,11 +277,6 @@ int main()
 				solver.startSolving();
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Regenerate points"))
-			{
-				solver.generatePoints(numberOfPoints);
-			}
-			ImGui::SameLine();
 			if (ImGui::Button("Stop solving"))
 			{
 				solver.interruptSolving();
@@ -302,7 +297,10 @@ int main()
 				}
 				
 			}
-
+			if (ImGui::Button("Regenerate points"))
+			{
+				solver.generatePoints(numberOfPoints);
+			}
 
 			ImGui::NewLine();
 

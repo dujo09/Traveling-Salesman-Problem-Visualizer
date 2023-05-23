@@ -31,8 +31,7 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
     isVisited.at(startPointIndex) = true;
     route.push_back(&points.at(startPointIndex));
 
-    //points.at(startPointIndex).setColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-    points.at(startPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR);
+    points.at(startPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
 
     while (route.size() < points.size())
     {
@@ -68,7 +67,7 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
         isVisited.at(closestPointIndex) = true; 
         routeLength += minDistance;
 
-        points.at(closestPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR);
+        points.at(closestPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
@@ -113,20 +112,14 @@ void TravelingSalesmanAlgorithms::twoOptAlgorithm(const unsigned int& timeStepMi
 
                 Point2D* firstEdge[2] = { route.at(i), route.at((i + 1) % numberOfPoints) };
                 Point2D* secondEdge[2] = { route.at(j), route.at((j + 1) % numberOfPoints) };
-                
-                firstEdge[0]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-                secondEdge[0]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-                std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
-                firstEdge[0]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
-                secondEdge[0]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
 
                 std::reverse(route.begin() + i + 1, route.begin() + j + 1);
 
-                firstEdge[0]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-                firstEdge[1]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
+                firstEdge[0]->setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_B);
+                firstEdge[1]->setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_B);
                 std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
-                firstEdge[0]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
-                firstEdge[1]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
+                firstEdge[0]->setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
+                firstEdge[1]->setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
 
                 // Formula: https://en.wikipedia.org/wiki/2-opt
                 float routeLengthDelta = firstEdge[0]->getDistanceToPoint(*secondEdge[0]) + firstEdge[1]->getDistanceToPoint(*secondEdge[1]) 
@@ -135,12 +128,6 @@ void TravelingSalesmanAlgorithms::twoOptAlgorithm(const unsigned int& timeStepMi
                 if ((int)routeLengthDelta >= 0)
                 {
                     std::reverse(route.begin() + i + 1, route.begin() + j + 1);
-
-                    firstEdge[0]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-                    secondEdge[0]->setOutgoingLineColor(SolverColors::POINT_HIGHLIGHT_COLOR);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
-                    firstEdge[0]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
-                    secondEdge[0]->setOutgoingLineColor(SolverColors::DEFAULT_COLOR);
                 }
                 else
                 {

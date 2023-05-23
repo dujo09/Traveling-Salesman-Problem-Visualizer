@@ -69,7 +69,7 @@ void TravelingSalesmanSolver::_startSolving()
     m_isSolving = true;
     m_isInterrupt = false;
 
-    setAllPointsColors(SolverColors::DEFAULT_COLOR);
+    setAllPointsColors(SolverColors::DEFAULT_LINE_COLOR);
 
     TravelingSalesmanAlgorithms::twoOptAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
 
