@@ -8,7 +8,6 @@ namespace SolverColors
 		return glm::vec3(colorRGB.x / 255.0f, colorRGB.y / 255.0f, colorRGB.z / 255.0f);
 	};
 
-	const glm::vec3 DEFAULT_LINE_COLOR = getColorFromRGB(glm::vec3(255, 255, 255));
 	const glm::vec3 DEFAULT_POINT_COLOR = getColorFromRGB(glm::vec3(230, 230, 230));
 
 	const glm::vec3 BACKGROUND_COLOR = getColorFromRGB(glm::vec3(19, 21, 21));

@@ -43,7 +43,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 static PointVertex* createRectangle(PointVertex* target, float lowerLeftX, float lowerLeftY, float width, float height, glm::vec3 color);
 static LineVertex* createLine(LineVertex* target, float xStart, float yStart, int xEnd, int yEnd, glm::vec3 color);
-static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd);
 
 const float INITIAL_SCREEN_WIDTH = 1280.0f;
 const float INITIAL_SCREEN_HEIGHT = 720.0f;
@@ -188,7 +187,8 @@ int main()
 	Shader pointShader("shaders/PointShader.vert", "shaders/PointShader.frag");
 	Shader lineShader("shaders/LineShader.vert", "shaders/LineShader.geo", "shaders/LineShader.frag");
 
-	TravelingSalesmanSolver solver(10, 0, 10000, 0, 10000);
+	TravelingSalesmanSolver solver(10, MAX_POINT_RADIUS, INITIAL_SCREEN_WIDTH - MAX_POINT_RADIUS, 
+		MAX_POINT_RADIUS, INITIAL_SCREEN_HEIGHT - MAX_POINT_RADIUS);
 
 	float pointRadius = INITIAL_POINT_RADIUS;
 	float lineWidth = INITIAL_LINE_WIDTH;
@@ -211,16 +211,10 @@ int main()
 
 			for (const Point2D& point : points)
 			{
-				const float pointCenterXOnScreen = mapNumberToRange(point.getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
-				const float pointCenterYOnScreen = mapNumberToRange(point.getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
+				const float pointLowerLeftX = point.getX() - pointRadius;
+				const float pointLowerLeftY = point.getY() - pointRadius;
 
-				const float pointLowerLeftXOnScreen = pointCenterXOnScreen - pointRadius;
-				const float pointLowerLeftYOnScreen = pointCenterYOnScreen - pointRadius;
-
-				buffer = createRectangle(buffer, pointLowerLeftXOnScreen, pointLowerLeftYOnScreen,
-					pointRadius * 2, pointRadius * 2, point.getColor());
+				buffer = createRectangle(buffer, pointLowerLeftX, pointLowerLeftY, pointRadius * 2, pointRadius * 2, point.getColor());
 				pointIndexCount += 6;
 			}
 
@@ -240,18 +234,8 @@ int main()
 
 			for (int i = 0; i < routeLength - 1; ++i)
 			{
-				const int lineXStartOnScreen = mapNumberToRange(route.at(i)->getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
-				const int lineYStartOnScreen = mapNumberToRange(route.at(i)->getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
-
-				const int lineXEndOnScreen = mapNumberToRange(route.at(i + 1)->getX(),
-					solver.getXMin(), solver.getXMax(), pointRadius, displayWidth - pointRadius);
-				const int lineYEndOnScreen = mapNumberToRange(route.at(i + 1)->getY(),
-					solver.getYMin(), solver.getYMax(), pointRadius, displayHeight - pointRadius);
-
-				buffer = createLine(buffer, lineXStartOnScreen, lineYStartOnScreen, 
-					lineXEndOnScreen, lineYEndOnScreen, route.at(i)->getOutgoingLineColor());
+				buffer = createLine(buffer, route.at(i)->getX(), route.at(i)->getY(),
+					route.at(i + 1)->getX(), route.at(i + 1)->getY(), route.at(i)->getOutgoingLineColor());
 				routeVertexCount += 2;
 			}
 
@@ -293,13 +277,15 @@ int main()
 			{
 				if (numberOfPoints > 0 && numberOfPoints < MAX_POINT_COUNT)
 				{
-					solver.generatePoints(numberOfPoints);
+					solver.generatePoints(numberOfPoints, MAX_POINT_RADIUS, displayWidth - MAX_POINT_RADIUS,
+						MAX_POINT_RADIUS, displayHeight - MAX_POINT_RADIUS);
 				}
 				
 			}
 			if (ImGui::Button("Regenerate points"))
 			{
-				solver.generatePoints(numberOfPoints);
+				solver.generatePoints(numberOfPoints, MAX_POINT_RADIUS, displayWidth - MAX_POINT_RADIUS,
+					MAX_POINT_RADIUS, displayHeight - MAX_POINT_RADIUS);
 			}
 
 			ImGui::NewLine();
@@ -312,8 +298,7 @@ int main()
 
 			ImGui::NewLine();
 
-			if (ImGui::RadioButton("Random algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::RANDOM) ||
-				ImGui::RadioButton("Greedy algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::GREEDY) ||
+			if (ImGui::RadioButton("Greedy algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::GREEDY) ||
 				ImGui::RadioButton("2-Opt algorithm", &selectedAlgorithmIndex, SolvingAlgorithm::TWO_OPT))
 			{
 				solver.setSolvingAlgorithm(SolvingAlgorithm(selectedAlgorithmIndex));
@@ -418,11 +403,4 @@ static LineVertex* createLine(LineVertex* target, float xStart, float yStart, in
 	++target;
 
 	return target;
-}
-
-static float mapNumberToRange(float input, float inputStart, float inputEnd, float outputStart, float outputEnd)
-{
-	// Formula: https://stackoverflow.com/questions/5731863/mapping-a-numeric-range-onto-another
-	float slope = (outputEnd - outputStart) / (inputEnd - inputStart);
-	return outputStart + slope * (input - inputStart);
 }

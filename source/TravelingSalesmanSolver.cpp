@@ -9,11 +9,7 @@ int TravelingSalesmanSolver::MAX_TIME_STEP_MILLISECONDS = 1000;
 
 TravelingSalesmanSolver::TravelingSalesmanSolver(int numberOfPoints, float xMin, float xMax, float yMin, float yMax)
 {
-    m_xMin = xMin;
-    m_xMax = xMax;
-    m_yMin = yMin;
-    m_yMax = yMax;
-	generatePoints(numberOfPoints);
+    generatePoints(numberOfPoints, xMin, xMax, yMin, yMax);
 }
 
 TravelingSalesmanSolver::~TravelingSalesmanSolver()
@@ -25,7 +21,7 @@ TravelingSalesmanSolver::~TravelingSalesmanSolver()
     }
 }
 
-void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
+void TravelingSalesmanSolver::generatePoints(int numberOfPoints, float xMin, float xMax, float yMin, float yMax)
 {
     if (m_isSolving)
     {
@@ -33,8 +29,8 @@ void TravelingSalesmanSolver::generatePoints(int numberOfPoints)
     }
 
 	std::random_device rd;
-	std::uniform_real_distribution<double> xDistribution(m_xMin, m_xMax);
-	std::uniform_real_distribution<double> yDistribution(m_yMin, m_yMax);
+	std::uniform_real_distribution<double> xDistribution(xMin, xMax);
+	std::uniform_real_distribution<double> yDistribution(yMin, yMax);
 
     m_route.clear();
     m_points.clear();
@@ -68,8 +64,6 @@ void TravelingSalesmanSolver::_startSolving()
 {
     m_isSolving = true;
     m_isInterrupt = false;
-
-    setAllPointsColors(SolverColors::DEFAULT_LINE_COLOR);
 
     TravelingSalesmanAlgorithms::twoOptAlgorithm(m_timeStepMilliseconds, m_isInterrupt, m_points, m_route, m_routeLength);
 

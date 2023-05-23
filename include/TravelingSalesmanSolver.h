@@ -8,7 +8,6 @@
 
 enum SolvingAlgorithm
 {
-	RANDOM,
 	GREEDY,
 	TWO_OPT,
 
@@ -16,13 +15,11 @@ enum SolvingAlgorithm
 
 class TravelingSalesmanSolver
 {
-	float m_xMin, m_xMax, m_yMin, m_yMax;
-
 	std::vector<Point2D> m_points;
 	std::vector<Point2D*> m_route;
 
 	unsigned int m_timeStepMilliseconds = 1000;
-	SolvingAlgorithm m_selectedAlgorithm = RANDOM;
+	SolvingAlgorithm m_selectedAlgorithm = TWO_OPT;
 
 	std::thread m_solving;
 	std::atomic<bool> m_isSolving = false;
@@ -69,16 +66,7 @@ public:
 
 	float getRouteLength() const { return m_routeLength; };
 
-	float getXMin() { return m_xMin; };
-	void setXMin(float xMin) { m_xMin = xMin; };
-	float getXMax() { return m_xMax; };
-	void setXMax(float xMax) { m_xMax = xMax; };
-	float getYMin() { return m_yMin; };
-	void setYMin(float yMin) { m_yMin = yMin; };
-	float getYMax() { return m_yMax; };
-	void setYMax(float yMax) { m_yMax = yMax; };
-
-	void generatePoints(int numberOfPoints);
+	void generatePoints(int numberOfPoints, float xMin, float xMax, float yMin, float yMax);
 
 	void startSolving();
 

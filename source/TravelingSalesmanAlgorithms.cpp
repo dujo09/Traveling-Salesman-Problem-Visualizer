@@ -19,21 +19,17 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
 
     routeLength = 0;
 
+    const int startPointIndex = 0;
 
-    std::random_device rd;
-    std::uniform_int_distribution<int> startPointDistribution(0, points.size() - 1);
-
-    int startPointIndex = startPointDistribution(rd);
     std::vector<bool> isVisited(points.size(), false);
-
-    startPointIndex = 0;
+    int numberOfPoints = points.size();
 
     isVisited.at(startPointIndex) = true;
     route.push_back(&points.at(startPointIndex));
 
     points.at(startPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
 
-    while (route.size() < points.size())
+    while (route.size() < numberOfPoints)
     {
         if (isInterrupt)
         {
@@ -44,8 +40,7 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
 
         Point2D* currentPoint = route.back();
         int closestPointIndex = -1;
-        int numberOfPoints = points.size();
-
+        
         float minDistance = std::numeric_limits<float>::max();
         for (int i = 0; i < numberOfPoints; ++i)
         {
