@@ -13,5 +13,8 @@ public:
 
 	static void twoOptAlgorithm(const unsigned int& timeStepMilliseconds, const std::atomic<bool>& isInterrupt,
 		std::vector<Point2D>& points, std::vector<Point2D*>& route, float& routeLength);
+
+	static void randomRouteAlgorithm(const unsigned int& timeStepMilliseconds, const std::atomic<bool>& isInterrupt,
+		std::vector<Point2D>& points, std::vector<Point2D*>& route, float& routeLength);
 };
 

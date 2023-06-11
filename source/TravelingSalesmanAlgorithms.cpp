@@ -21,8 +21,8 @@ void TravelingSalesmanAlgorithms::greedyAlgorithm(const unsigned int& timeStepMi
 
     const int startPointIndex = 0;
 
-    std::vector<bool> isVisited(points.size(), false);
     int numberOfPoints = points.size();
+    std::vector<bool> isVisited(numberOfPoints, false);
 
     isVisited.at(startPointIndex) = true;
     route.push_back(&points.at(startPointIndex));
@@ -88,7 +88,7 @@ void TravelingSalesmanAlgorithms::twoOptAlgorithm(const unsigned int& timeStepMi
     routeLength = 0;
 
 
-    greedyAlgorithm(timeStepMilliseconds, isInterrupt, points, route, routeLength);
+    randomRouteAlgorithm(timeStepMilliseconds, isInterrupt, points, route, routeLength);
 
     int numberOfPoints = points.size();
     bool foundImprovement = true;
@@ -132,4 +132,58 @@ void TravelingSalesmanAlgorithms::twoOptAlgorithm(const unsigned int& timeStepMi
             }
         }
     }
+}
+
+void TravelingSalesmanAlgorithms::randomRouteAlgorithm(const unsigned int& timeStepMilliseconds, const std::atomic<bool>& isInterrupt, 
+    std::vector<Point2D>& points, std::vector<Point2D*>& route, float& routeLength)
+{
+    if (!route.empty())
+    {
+        route.clear();
+    }
+    if (route.capacity() < points.size() + 1)
+    {
+        route.reserve(points.size() + 1);
+    }
+
+    routeLength = 0;
+
+
+    const int startPointIndex = 0;
+
+    int numberOfPoints = points.size();
+    std::vector<bool> isVisited(numberOfPoints, false);
+
+    isVisited.at(startPointIndex) = true;
+    route.push_back(&points.at(startPointIndex));
+
+    points.at(startPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
+
+    std::random_device rd;
+    std::uniform_int_distribution<int> pointDistribution(0, numberOfPoints - 1);
+
+    while (route.size() < numberOfPoints)
+    {
+        if (isInterrupt)
+        {
+            return;
+        }
+
+        int randomPointIndex = pointDistribution(rd);
+
+        if (isVisited.at(randomPointIndex))
+        {
+            continue;
+        }
+        route.push_back(&points.at(randomPointIndex));
+
+        points.at(randomPointIndex).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
+        std::this_thread::sleep_for(std::chrono::milliseconds(timeStepMilliseconds));
+        
+        isVisited.at(randomPointIndex) = true;
+    }
+
+    route.push_back(&points.at(0));
+    points.at(0).setOutgoingLineColor(SolverColors::LINE_HIGHLIGHT_COLOR_A);
+
 }
